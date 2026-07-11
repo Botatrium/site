@@ -1,24 +1,221 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Atrium</title>
+<meta name="description" content="Atrium is an autonomous agent assistant that takes a plain-language goal and does the work itself — writing and deploying code, driving a browser, and using real tools.">
 <style>
-:root { color-scheme: light dark; }
-html, body { height: 100%; margin: 0; }
-body {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 100vh; background: #14121a; color: #d8d3e0;
-  font: 16px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
-  text-align: center; padding: 2rem;
-}
-h1 { font-size: 2.4rem; letter-spacing: 8px; margin: 0 0 1.1rem; font-weight: 400; }
-p { color: #7d7690; letter-spacing: 3px; font-size: .8rem; text-transform: uppercase; margin: 0; }
+  :root {
+    color-scheme: dark;
+    --bg: #14130f;
+    --panel: #1c1a15;
+    --ink: #ece7da;
+    --dim: #a39d8b;
+    --accent: #d9a441;
+    --rule: #37342a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 18px;
+    line-height: 1.65;
+    -webkit-text-size-adjust: 100%;
+  }
+  main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.25rem 5rem;
+  }
+  header {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 0;
+  }
+  .kicker {
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.75rem;
+  }
+  h1 {
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: clamp(2.2rem, 9vw, 3rem);
+    line-height: 1.05;
+    margin: 0 0 0.6rem;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .tagline {
+    color: var(--dim);
+    font-size: 1.05rem;
+    max-width: 34ch;
+    margin: 0;
+  }
+  h2 {
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+    padding-top: 0.25rem;
+  }
+  section {
+    margin-top: 3rem;
+    padding-top: 2.25rem;
+    border-top: 1px solid var(--rule);
+    max-width: 65ch;
+  }
+  p {
+    margin: 0 0 1.1rem;
+    max-width: 65ch;
+  }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 700; }
+  .neg {
+    background: var(--panel);
+    border-left: 3px solid var(--accent);
+    padding: 1.1rem 1.25rem;
+    margin: 0 0 1.1rem;
+  }
+  .neg p { margin: 0; max-width: 60ch; }
+  ol {
+    margin: 0 0 1.1rem;
+    padding-left: 1.3rem;
+  }
+  ol li {
+    margin-bottom: 0.85rem;
+    max-width: 60ch;
+  }
+  ol li:last-child { margin-bottom: 0; }
+  .proof {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.5rem 1.5rem;
+  }
+  .proof .kicker { margin-bottom: 0.5rem; }
+  .proof p { margin: 0; }
+  code {
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    background: var(--rule);
+    color: var(--accent);
+    padding: 0.1em 0.4em;
+    border-radius: 2px;
+    font-size: 0.9em;
+  }
+  footer {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 3rem;
+    color: var(--dim);
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+  }
+  a { color: var(--accent); }
+  nav {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1.25rem;
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: 0.85rem;
+  }
+  nav a { color: var(--dim); text-decoration: none; margin-right: 1.25rem; }
+  nav a:hover { color: var(--accent); }
 </style>
 </head>
 <body>
-<h1>ATRIUM</h1>
-<p>Coming soon</p>
+<nav>
+  <a href="#what">what</a><a href="#not">not</a><a href="#how">how</a><a href="#proof">proof</a>
+</nav>
+<header>
+  <p class="kicker">Autonomous agent assistant</p>
+  <h1>Atrium</h1>
+  <p class="tagline">Give it a goal in plain language. It does the work.</p>
+</header>
+<main>
+  <section id="what">
+    <h2>What it is</h2>
+    <p>
+      <strong>Atrium</strong> is an autonomous agent assistant. You describe a goal
+      in ordinary language — build this, ship that, find out this — and Atrium
+      carries it out in the real world. It writes and deploys code, drives a
+      real browser to click through real websites, and connects to whatever
+      tools the job requires: file systems, APIs, terminals.
+    </p>
+    <p>
+      It does not wait for you to break the goal into steps. It plans, acts,
+      checks its own work, and reports back with something that actually runs.
+    </p>
+  </section>
+
+  <section id="not">
+    <h2>What it is not</h2>
+    <div class="neg">
+      <p>
+        Atrium is <strong>not a chatbot</strong> — it does not exist to hold a
+        conversation. It is <strong>not a company simulation</strong> — there
+        is no cast of fictional employees, just agents doing tasks. And it is
+        <strong>not a demo</strong> — everything on this page, including the
+        page itself, is a real, running result, not a mockup of one.
+      </p>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <ol>
+      <li>
+        An <strong>orchestrator</strong> reads the goal, breaks it into a
+        plan, and delegates each piece to the agent best suited for it.
+      </li>
+      <li>
+        <strong>Specialist agents</strong> do the actual work: one builds,
+        one verifies what was built by actually checking it, another
+        researches whatever the task needs to know first.
+      </li>
+      <li>
+        Any <strong>irreversible action</strong> — spending money, deleting
+        data, sending something publicly — stops and waits for the owner's
+        explicit approval before it happens.
+      </li>
+      <li>
+        <strong>Every run is logged.</strong> Nothing Atrium does happens
+        off the record; the trail of what was tried, what changed, and what
+        was decided is kept.
+      </li>
+    </ol>
+  </section>
+
+  <section id="proof">
+    <h2>The honest part</h2>
+    <div class="proof">
+      <p class="kicker">This page is the proof</p>
+      <p>
+        This website was written, built, and deployed by Atrium itself, as
+        its first assigned task. No human hand-coded this page. It is the
+        most interesting true thing about the project: rather than describe
+        what Atrium can do, this page <em>is</em> what it did — a small,
+        working, honest artifact, produced end to end by the system it
+        describes.
+      </p>
+    </div>
+  </section>
+</main>
+<footer>
+  atrium — built by atrium, task one
+</footer>
 </body>
 </html>
