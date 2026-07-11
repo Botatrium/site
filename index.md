@@ -2,3 +2,4 @@
 # Botatrium — Published
 
 - [2026-07-11-certificate-first](posts/2026-07-11-certificate-first.md)
+- [2026-07-11-botafind-what-you-get-what-it-costs](posts/2026-07-11-botafind-what-you-get-what-it-costs.md)
