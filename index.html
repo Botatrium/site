@@ -3,219 +3,752 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atrium</title>
-<meta name="description" content="Atrium is an autonomous agent assistant that takes a plain-language goal and does the work itself — writing and deploying code, driving a browser, and using real tools.">
+<title>Atrium — The Autonomous Executor</title>
+<meta name="description" content="Atrium is an autonomous executor. State a goal in plain language and it finishes the work in the real world -- writing and deploying code, driving a real browser, using real tools -- then returns a finished, independently verified, live result.">
+<meta name="color-scheme" content="dark">
 <style>
-  :root {
-    color-scheme: dark;
-    --bg: #14130f;
-    --panel: #1c1a15;
-    --ink: #ece7da;
-    --dim: #a39d8b;
-    --accent: #d9a441;
-    --rule: #37342a;
+  :root{
+    --bg:#07070b;
+    --bg-soft:#0c0d13;
+    --panel:#11121a;
+    --panel-2:#161822;
+    --ink:#eef0f7;
+    --dim:#9095ab;
+    --dim-2:#666b82;
+    --rule:#23252f;
+    --accent:#7c7fff;
+    --accent-2:#22d3ee;
+    --accent-ink:#c9caff;
+    --good:#3ddc97;
+    --radius:14px;
+    --maxw:1120px;
   }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    max-width: 100%;
-    overflow-x: hidden;
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{
+    -webkit-text-size-adjust:100%;
+    scroll-behavior:smooth;
   }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
-    font-size: 18px;
-    line-height: 1.65;
-    -webkit-text-size-adjust: 100%;
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+    background:var(--bg);
   }
-  main {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 3.5rem 1.25rem 5rem;
+  body{
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+    font-size:16px;
   }
-  header {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 2rem 1.25rem 0;
+  img,svg,canvas,video{ max-width:100%; display:block; }
+  .mono{
+    font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
   }
-  .kicker {
-    font-family: "SF Mono", "Courier New", Courier, monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 0.75rem;
+  a{ color:var(--accent-ink); }
+  ::selection{ background:var(--accent); color:#fff; }
+
+  .skip-link{
+    position:absolute; left:-999px; top:0;
+    background:var(--accent); color:#fff; padding:0.6rem 1rem;
+    z-index:1000; border-radius:0 0 8px 0;
   }
-  h1 {
-    font-family: "SF Mono", "Courier New", Courier, monospace;
-    font-size: clamp(2.2rem, 9vw, 3rem);
-    line-height: 1.05;
-    margin: 0 0 0.6rem;
-    color: var(--ink);
-    letter-spacing: -0.01em;
+  .skip-link:focus{ left:0; }
+
+  #progress-track{
+    position:fixed; top:0; left:0; right:0; height:3px;
+    background:transparent; z-index:900; pointer-events:none;
   }
-  .tagline {
-    color: var(--dim);
-    font-size: 1.05rem;
-    max-width: 34ch;
-    margin: 0;
+  #progress-bar{
+    height:100%; width:100%;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    transform:scaleX(0); transform-origin:left center;
+    transition:transform 0.08s linear;
   }
-  h2 {
-    font-family: "SF Mono", "Courier New", Courier, monospace;
-    font-size: 0.95rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 1rem;
-    padding-top: 0.25rem;
+
+  header.site-nav{
+    position:fixed; top:0; left:0; right:0; z-index:800;
+    background:rgba(7,7,11,0.72);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--rule);
   }
-  section {
-    margin-top: 3rem;
-    padding-top: 2.25rem;
-    border-top: 1px solid var(--rule);
-    max-width: 65ch;
+  .nav-inner{
+    max-width:var(--maxw); margin:0 auto;
+    padding:0.85rem 1.25rem;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:0.6rem 1rem;
   }
-  p {
-    margin: 0 0 1.1rem;
-    max-width: 65ch;
+  .brand{
+    font-weight:700; font-size:1.05rem; letter-spacing:-0.01em;
+    display:flex; align-items:center; gap:0.5rem;
+    text-decoration:none; color:var(--ink);
   }
-  p:last-child { margin-bottom: 0; }
-  strong { color: var(--ink); font-weight: 700; }
-  .neg {
-    background: var(--panel);
-    border-left: 3px solid var(--accent);
-    padding: 1.1rem 1.25rem;
-    margin: 0 0 1.1rem;
+  .brand-mark{ width:20px; height:20px; flex:none; }
+  .nav-links{
+    display:flex; flex-wrap:wrap; gap:1.1rem;
+    list-style:none; margin:0; padding:0;
   }
-  .neg p { margin: 0; max-width: 60ch; }
-  ol {
-    margin: 0 0 1.1rem;
-    padding-left: 1.3rem;
+  .nav-links a{ text-decoration:none; color:var(--dim); font-size:0.9rem; transition:color 0.2s ease; }
+  .nav-links a:hover{ color:var(--ink); }
+
+  main{ display:block; width:100%; max-width:100%; overflow-x:hidden; }
+
+  section{ position:relative; padding:5.5rem 1.25rem; max-width:100%; }
+  .section-inner{ max-width:var(--maxw); margin:0 auto; width:100%; }
+  .kicker{
+    font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:0.78rem; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--accent-2); margin:0 0 0.9rem; display:flex; align-items:center; gap:0.5rem;
   }
-  ol li {
-    margin-bottom: 0.85rem;
-    max-width: 60ch;
+  .kicker::before{ content:""; width:1.4rem; height:1px; background:var(--accent-2); display:inline-block; }
+  h2{ font-size:clamp(1.6rem,4vw,2.3rem); line-height:1.2; letter-spacing:-0.02em; margin:0 0 1rem; max-width:28ch; }
+  h3{ font-size:1.15rem; margin:0 0 0.6rem; letter-spacing:-0.01em; }
+  .lede{ color:var(--dim); font-size:1.05rem; max-width:60ch; margin:0 0 1.1rem; }
+  p{ margin:0 0 1rem; }
+  p:last-child{ margin-bottom:0; }
+
+  #hero{ min-height:100svh; display:flex; align-items:center; padding-top:7rem; padding-bottom:4rem; overflow:hidden; }
+  .hero-bg{
+    position:absolute; inset:0; z-index:0; overflow:hidden;
+    background:
+      radial-gradient(60% 50% at 50% 0%, #12142080 0%, transparent 70%),
+      var(--bg);
   }
-  ol li:last-child { margin-bottom: 0; }
-  .proof {
-    background: var(--panel);
-    border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: 1.5rem 1.5rem;
+  .orb{ position:absolute; border-radius:50%; filter:blur(60px); opacity:0.5; will-change:transform; }
+  .orb-1{ width:38vmax; height:38vmax; left:-10vmax; top:-12vmax; background:radial-gradient(circle,rgba(124,127,255,0.55),transparent 65%); animation:float-1 22s ease-in-out infinite; }
+  .orb-2{ width:34vmax; height:34vmax; right:-12vmax; top:6vmax; background:radial-gradient(circle,rgba(34,211,238,0.4),transparent 65%); animation:float-2 26s ease-in-out infinite; }
+  .orb-3{ width:26vmax; height:26vmax; left:20vmax; bottom:-14vmax; background:radial-gradient(circle,rgba(61,220,151,0.28),transparent 65%); animation:float-3 30s ease-in-out infinite; }
+  @keyframes float-1{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(4vmax,3vmax); } }
+  @keyframes float-2{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-3vmax,4vmax); } }
+  @keyframes float-3{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(2vmax,-3vmax); } }
+  #hero-canvas{ position:absolute; inset:0; width:100%; height:100%; opacity:0.7; }
+  .hero-content{ position:relative; z-index:2; max-width:var(--maxw); margin:0 auto; width:100%; padding:0 1.25rem; }
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; gap:0.5rem;
+    font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--accent-ink);
+    background:rgba(124,127,255,0.1);
+    border:1px solid rgba(124,127,255,0.35);
+    padding:0.4rem 0.8rem; border-radius:999px;
+    margin-bottom:1.6rem;
   }
-  .proof .kicker { margin-bottom: 0.5rem; }
-  .proof p { margin: 0; }
-  code {
-    font-family: "SF Mono", "Courier New", Courier, monospace;
-    background: var(--rule);
-    color: var(--accent);
-    padding: 0.1em 0.4em;
-    border-radius: 2px;
-    font-size: 0.9em;
+  .hero-eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--good); box-shadow:0 0 0 3px rgba(61,220,151,0.2); }
+  h1{
+    font-size:clamp(3rem,10vw,6rem);
+    line-height:0.98; letter-spacing:-0.04em; font-weight:800;
+    margin:0 0 1.2rem;
+    background:linear-gradient(120deg,#ffffff 15%,var(--accent-ink) 55%,var(--accent-2) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    max-width:14ch;
   }
-  footer {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 2.5rem 1.25rem 3rem;
-    color: var(--dim);
-    font-family: "SF Mono", "Courier New", Courier, monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
+  .hero-tagline{ font-size:clamp(1.1rem,2.6vw,1.55rem); color:var(--ink); max-width:34ch; margin:0 0 1.1rem; letter-spacing:-0.01em; }
+  .hero-sub{ color:var(--dim); font-size:1.05rem; max-width:52ch; margin:0 0 2.2rem; }
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:0.9rem; margin-bottom:3.2rem; }
+  .btn{
+    display:inline-flex; align-items:center; gap:0.5rem;
+    padding:0.85rem 1.4rem; border-radius:10px;
+    font-size:0.95rem; font-weight:600; text-decoration:none;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color .2s ease;
+    border:1px solid transparent;
   }
-  a { color: var(--accent); }
-  nav {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 1.25rem;
-    font-family: "SF Mono", "Courier New", Courier, monospace;
-    font-size: 0.85rem;
+  .btn-primary{ background:linear-gradient(120deg,var(--accent),#5b5ee0); color:#fff; box-shadow:0 10px 30px -10px rgba(124,127,255,0.55); }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 14px 34px -10px rgba(124,127,255,0.7); }
+  .btn-ghost{ background:rgba(255,255,255,0.03); border-color:var(--rule); color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--accent-ink); transform:translateY(-2px); }
+
+  .scroll-cue{ display:flex; flex-direction:column; align-items:center; gap:0.5rem; color:var(--dim-2); font-size:0.75rem; letter-spacing:0.14em; text-transform:uppercase; width:fit-content; }
+  .scroll-cue svg{ animation:cue-bounce 1.8s ease-in-out infinite; }
+  @keyframes cue-bounce{ 0%,100%{ transform:translateY(0); opacity:0.6; } 50%{ transform:translateY(6px); opacity:1; } }
+
+  .reveal{
+    opacity:0; transform:translateY(22px);
+    transition:opacity 0.7s cubic-bezier(.2,.7,.3,1), transform 0.7s cubic-bezier(.2,.7,.3,1);
+    will-change:opacity, transform;
   }
-  nav a { color: var(--dim); text-decoration: none; margin-right: 1.25rem; }
-  nav a:hover { color: var(--accent); }
+  .reveal.in-view{ opacity:1; transform:translateY(0); }
+  .stagger .reveal:nth-child(1){ transition-delay:0.02s; }
+  .stagger .reveal:nth-child(2){ transition-delay:0.10s; }
+  .stagger .reveal:nth-child(3){ transition-delay:0.18s; }
+  .stagger .reveal:nth-child(4){ transition-delay:0.26s; }
+  .stagger .reveal:nth-child(5){ transition-delay:0.34s; }
+  .stagger .reveal:nth-child(6){ transition-delay:0.42s; }
+
+  #what{ border-top:1px solid var(--rule); background:var(--bg-soft); }
+  .what-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:3rem; align-items:start; }
+  .what-copy p{ color:var(--dim); font-size:1.02rem; }
+  .not-list{ list-style:none; margin:1.5rem 0 0; padding:0; display:grid; gap:0.9rem; }
+  .not-list li{ display:flex; gap:0.7rem; align-items:flex-start; color:var(--dim); font-size:0.98rem; }
+  .not-list svg{ flex:none; margin-top:0.2rem; }
+  .fact-card{ background:var(--panel); border:1px solid var(--rule); border-radius:var(--radius); padding:1.6rem; }
+  .fact-card + .fact-card{ margin-top:1rem; }
+  .fact-num{
+    font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    color:var(--accent-2); font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase;
+    margin-bottom:0.5rem; display:block;
+  }
+  .fact-card p{ color:var(--dim); font-size:0.95rem; margin:0; }
+  .fact-card h3{ margin-bottom:0.4rem; }
+
+  #how{ border-top:1px solid var(--rule); }
+  .timeline{ position:relative; margin:2.6rem 0 0; padding-left:2.4rem; list-style:none; }
+  .timeline::before{ content:""; position:absolute; left:0.55rem; top:0.35rem; bottom:0.35rem; width:2px; background:linear-gradient(var(--rule),var(--rule)); }
+  .step{ position:relative; padding-bottom:2.6rem; }
+  .step:last-child{ padding-bottom:0; }
+  .step::before{
+    content:""; position:absolute; left:-2.4rem; top:0.15rem;
+    width:1.05rem; height:1.05rem; border-radius:50%;
+    background:var(--bg); border:2px solid var(--rule);
+    transition:background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+  .step.in-view::before{ border-color:var(--accent-2); background:var(--accent-2); box-shadow:0 0 0 5px rgba(34,211,238,0.16); }
+  .step-label{
+    font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--accent-2); margin-bottom:0.35rem; display:block;
+  }
+  .step p{ color:var(--dim); max-width:56ch; }
+
+  #principles{ border-top:1px solid var(--rule); background:var(--bg-soft); }
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.25rem; margin-top:2.4rem; }
+  .card{
+    background:var(--panel); border:1px solid var(--rule); border-radius:var(--radius); padding:1.6rem;
+    transition:transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    min-width:0;
+  }
+  .card:hover{ transform:translateY(-4px); border-color:rgba(124,127,255,0.4); background:var(--panel-2); }
+  .card-icon{
+    width:2.5rem; height:2.5rem; border-radius:9px;
+    background:rgba(124,127,255,0.12);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:1rem; color:var(--accent-ink);
+  }
+  .card p{ color:var(--dim); font-size:0.94rem; }
+
+  #safety{ border-top:1px solid var(--rule); }
+  .safety-grid{ display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; }
+  .approval-mock{ background:var(--panel); border:1px solid var(--rule); border-radius:var(--radius); padding:1.4rem; max-width:360px; }
+  .approval-mock .row{ display:flex; align-items:center; gap:0.6rem; color:var(--dim-2); font-size:0.78rem; margin-bottom:1rem; }
+  .approval-mock .row .lamp{ width:8px; height:8px; border-radius:50%; background:#5a5f75; }
+  .approval-mock .row .lamp.red{ background:#ff6b6b; }
+  .approval-mock .row .lamp.yellow{ background:#ffd166; }
+  .approval-mock .row .lamp.green{ background:var(--good); }
+  .approval-title{ font-weight:600; margin-bottom:0.3rem; }
+  .approval-body{ color:var(--dim); font-size:0.9rem; margin-bottom:1.2rem; }
+  .approval-actions{ display:flex; gap:0.7rem; }
+  .approval-actions .a-btn{ flex:1; text-align:center; padding:0.65rem 0.8rem; border-radius:8px; font-size:0.85rem; font-weight:600; }
+  .a-btn.approve{ background:rgba(61,220,151,0.14); color:var(--good); border:1px solid rgba(61,220,151,0.4); }
+  .a-btn.deny{ background:rgba(255,107,107,0.1); color:#ff9494; border:1px solid rgba(255,107,107,0.32); }
+  .safety-list{ list-style:none; margin:1.6rem 0 0; padding:0; display:grid; gap:1.1rem; }
+  .safety-list li{ display:flex; gap:0.8rem; color:var(--dim); font-size:0.98rem; }
+  .safety-list svg{ flex:none; margin-top:0.15rem; color:var(--accent-2); }
+
+  #terminal{ border-top:1px solid var(--rule); background:var(--bg-soft); }
+  .terminal{
+    background:#0a0b10; border:1px solid var(--rule); border-radius:var(--radius);
+    overflow:hidden; margin-top:2.2rem; box-shadow:0 30px 60px -30px rgba(0,0,0,0.6);
+  }
+  .terminal-bar{ display:flex; align-items:center; gap:0.5rem; padding:0.8rem 1rem; background:var(--panel); border-bottom:1px solid var(--rule); }
+  .terminal-dot{ width:11px; height:11px; border-radius:50%; }
+  .terminal-dot.r{ background:#ff5f56; }
+  .terminal-dot.y{ background:#ffbd2e; }
+  .terminal-dot.g{ background:#27c93f; }
+  .terminal-title{ margin-left:0.6rem; color:var(--dim-2); font-size:0.78rem; font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,monospace; }
+  .terminal-body{
+    padding:1.4rem 1.25rem 1.6rem;
+    font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:0.86rem; line-height:1.7;
+    max-width:100%; overflow-x:auto;
+  }
+  .term-line{
+    white-space:pre-wrap; overflow-wrap:anywhere;
+    color:var(--dim); margin:0 0 0.15rem;
+    opacity:0; transform:translateY(6px);
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  .terminal.in-view .term-line{ opacity:1; transform:translateY(0); }
+  .terminal.in-view .term-line:nth-child(1){ transition-delay:0.05s; }
+  .terminal.in-view .term-line:nth-child(2){ transition-delay:0.20s; }
+  .terminal.in-view .term-line:nth-child(3){ transition-delay:0.35s; }
+  .terminal.in-view .term-line:nth-child(4){ transition-delay:0.50s; }
+  .terminal.in-view .term-line:nth-child(5){ transition-delay:0.65s; }
+  .terminal.in-view .term-line:nth-child(6){ transition-delay:0.80s; }
+  .terminal.in-view .term-line:nth-child(7){ transition-delay:0.95s; }
+  .terminal.in-view .term-line:nth-child(8){ transition-delay:1.10s; }
+  .terminal.in-view .term-line:nth-child(9){ transition-delay:1.25s; }
+  .terminal.in-view .term-line:nth-child(10){ transition-delay:1.40s; }
+  .term-prompt{ color:var(--accent-2); }
+  .term-pass{ color:var(--good); font-weight:700; }
+  .term-cursor{
+    display:inline-block; width:0.55em; height:1em; background:var(--accent-2);
+    vertical-align:text-bottom; margin-left:0.15em;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  footer{ border-top:1px solid var(--rule); padding:3rem 1.25rem 3.5rem; }
+  .footer-inner{
+    max-width:var(--maxw); margin:0 auto;
+    display:flex; flex-wrap:wrap; gap:1.5rem;
+    align-items:center; justify-content:space-between;
+    color:var(--dim-2); font-size:0.85rem;
+  }
+  .footer-brand{ display:flex; align-items:center; gap:0.5rem; color:var(--dim); }
+  .footer-links{ display:flex; gap:1.2rem; list-style:none; margin:0; padding:0; flex-wrap:wrap; }
+  .footer-links a{ color:var(--dim-2); text-decoration:none; }
+  .footer-links a:hover{ color:var(--ink); }
+
+  @media (max-width:840px){
+    .what-grid, .safety-grid{ grid-template-columns:1fr; gap:2.2rem; }
+    section{ padding:4rem 1.1rem; }
+    .approval-mock{ max-width:100%; }
+  }
+
+  @media (max-width:480px){
+    h1{ letter-spacing:-0.03em; }
+    .hero-actions{ flex-direction:column; }
+    .hero-actions .btn{ width:100%; justify-content:center; }
+    .nav-links{ font-size:0.85rem; gap:0.8rem 0.9rem; }
+    .terminal-body{ font-size:0.78rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.001ms !important;
+      scroll-behavior:auto !important;
+    }
+    .reveal, .step, .term-line{ opacity:1 !important; transform:none !important; }
+  }
 </style>
 </head>
 <body>
-<nav>
-  <a href="#what">what</a><a href="#not">not</a><a href="#how">how</a><a href="#proof">proof</a>
-</nav>
-<header>
-  <p class="kicker">Autonomous agent assistant</p>
-  <h1>Atrium</h1>
-  <p class="tagline">Give it a goal in plain language. It does the work.</p>
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<div id="progress-track" aria-hidden="true"><div id="progress-bar"></div></div>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand" href="#hero">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="5" stroke="url(#g1)" stroke-width="1.6"/>
+        <path d="M7 16V9.5L12 6l5 3.5V16" stroke="url(#g1)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="g1" x1="2" y1="2" x2="22" y2="22">
+            <stop offset="0" stop-color="#7c7fff"/>
+            <stop offset="1" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      Atrium
+    </a>
+    <ul class="nav-links">
+      <li><a href="#what">What</a></li>
+      <li><a href="#how">How it runs</a></li>
+      <li><a href="#principles">Principles</a></li>
+      <li><a href="#safety">Safety</a></li>
+      <li><a href="#terminal">Log</a></li>
+    </ul>
+  </div>
 </header>
-<main>
-  <section id="what">
-    <h2>What it is</h2>
-    <p>
-      <strong>Atrium</strong> is an autonomous agent assistant. You describe a goal
-      in ordinary language — build this, ship that, find out this — and Atrium
-      carries it out in the real world. It writes and deploys code, drives a
-      real browser to click through real websites, and connects to whatever
-      tools the job requires: file systems, APIs, terminals.
-    </p>
-    <p>
-      It does not wait for you to break the goal into steps. It plans, acts,
-      checks its own work, and reports back with something that actually runs.
-    </p>
+
+<main id="main-content">
+
+  <section id="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+      <canvas id="hero-canvas"></canvas>
+    </div>
+    <div class="hero-content">
+      <span class="hero-eyebrow"><span class="dot"></span>Autonomous executor &middot; online</span>
+      <h1>Atrium</h1>
+      <p class="hero-tagline">You state the goal. It ships the result.</p>
+      <p class="hero-sub">Atrium doesn't return plans or reports about work. It writes and deploys code, drives a real browser, and uses real tools -- then comes back with something finished, independently verified, and live.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#how">See how a run works</a>
+        <a class="btn btn-ghost" href="#principles">Read the principles</a>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">
+        Scroll
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
   </section>
 
-  <section id="not">
-    <h2>What it is not</h2>
-    <div class="neg">
-      <p>
-        Atrium is <strong>not a chatbot</strong> — it does not exist to hold a
-        conversation. It is <strong>not a company simulation</strong> — there
-        is no cast of fictional employees, just agents doing tasks. And it is
-        <strong>not a demo</strong> — everything on this page, including the
-        page itself, is a real, running result, not a mockup of one.
-      </p>
+  <section id="what">
+    <div class="section-inner">
+      <div class="what-grid">
+        <div class="what-copy reveal">
+          <p class="kicker">What Atrium is</p>
+          <h2>An executor, not an assistant that talks about executing</h2>
+          <p>Atrium is an autonomous executor. Give it a goal in plain language -- build this, ship that, fix this bug, find out this fact -- and it finishes the work in the real world, end to end.</p>
+          <p>It writes and deploys code. It drives a real browser to click through real websites. It calls real tools: file systems, APIs, terminals, deploy pipelines. It doesn't hand you a plan and stop; it doesn't summarize what it <em>would</em> do. It does the thing, then shows you the finished, live artifact.</p>
+          <ul class="not-list">
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12" stroke="#ff9494" stroke-width="2" stroke-linecap="round"/></svg>
+              Not a chatbot -- it isn't built to hold a conversation, it's built to finish tasks.
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12" stroke="#ff9494" stroke-width="2" stroke-linecap="round"/></svg>
+              Not infrastructure theater -- no scaffolding for its own sake, no plans instead of progress.
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12" stroke="#ff9494" stroke-width="2" stroke-linecap="round"/></svg>
+              Not self-graded -- every result is checked by a judge that Atrium doesn't control.
+            </li>
+          </ul>
+        </div>
+        <div class="reveal">
+          <div class="fact-card">
+            <span class="fact-num">Finish, don't prepare</span>
+            <h3>Real tasks, done end to end</h3>
+            <p>No infrastructure theater. If the goal is "deploy the fix," the fix is deployed -- not documented, not staged, not roadmapped.</p>
+          </div>
+          <div class="fact-card">
+            <span class="fact-num">Deterministic delivery</span>
+            <h3>The model thinks, code runs</h3>
+            <p>An LLM plans and decides. What actually executes at runtime is ordinary, deterministic code -- no model calls hiding inside the loop.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
   <section id="how">
-    <h2>How it works</h2>
-    <ol>
-      <li>
-        An <strong>orchestrator</strong> reads the goal, breaks it into a
-        plan, and delegates each piece to the agent best suited for it.
-      </li>
-      <li>
-        <strong>Specialist agents</strong> do the actual work: one builds,
-        one verifies what was built by actually checking it, another
-        researches whatever the task needs to know first.
-      </li>
-      <li>
-        Any <strong>irreversible action</strong> — spending money, deleting
-        data, sending something publicly — stops and waits for the owner's
-        explicit approval before it happens.
-      </li>
-      <li>
-        <strong>Every run is logged.</strong> Nothing Atrium does happens
-        off the record; the trail of what was tried, what changed, and what
-        was decided is kept.
-      </li>
-    </ol>
-  </section>
-
-  <section id="proof">
-    <h2>The honest part</h2>
-    <div class="proof">
-      <p class="kicker">This page is the proof</p>
-      <p>
-        This website was written, built, and deployed by Atrium itself, as
-        its first assigned task. No human hand-coded this page. It is the
-        most interesting true thing about the project: rather than describe
-        what Atrium can do, this page <em>is</em> what it did — a small,
-        working, honest artifact, produced end to end by the system it
-        describes.
-      </p>
+    <div class="section-inner">
+      <p class="kicker reveal">How a run works</p>
+      <h2 class="reveal">Goal in, verified result out</h2>
+      <p class="lede reveal">Every Atrium run follows the same shape, whether the task takes ten seconds or ten hours. Nothing ships until it has been checked by something other than the agent that built it.</p>
+      <ol class="timeline">
+        <li class="step reveal">
+          <span class="step-label">01 &middot; Goal</span>
+          <h3>You state the goal</h3>
+          <p>Plain language, no ticket format required: "deploy the pricing update," "find out why signups dropped," "rebuild this page." No prompt engineering, no spec document.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-label">02 &middot; Plan</span>
+          <h3>The orchestrator plans</h3>
+          <p>A single orchestrator reads the goal and turns it into a concrete sequence of steps, deciding what needs to happen and in what order.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-label">03 &middot; Delegate</span>
+          <h3>Work is delegated</h3>
+          <p>Each step goes to the specialist built for it: a builder agent, a researcher agent, a verifier agent, a utility agent -- one job each, done well.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-label">04 &middot; Build</span>
+          <h3>Workers do the real work</h3>
+          <p>Code gets written and deployed. Browsers get driven. Tools get called. An actual artifact comes out the other end -- not a description of one.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-label">05 &middot; Verify</span>
+          <h3>An independent judge checks it</h3>
+          <p>A separate verifier compares the live result against acceptance criteria that were written down before the run started. Atrium never grades its own homework.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-label">06 &middot; Live</span>
+          <h3>What ships is the result itself</h3>
+          <p>Not a plan, not a report about a result -- the finished, verified thing, already live. If a step fails, the run keeps its state and resumes; nothing gets reset to zero.</p>
+        </li>
+      </ol>
     </div>
   </section>
+
+  <section id="principles">
+    <div class="section-inner">
+      <p class="kicker reveal">Principles</p>
+      <h2 class="reveal">The rules Atrium doesn't bend</h2>
+      <p class="lede reveal">These aren't aspirations. They're constraints enforced in how the system is built.</p>
+      <div class="card-grid stagger">
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Finish, don't prepare</h3>
+          <p>No infrastructure theater. Real tasks are done end to end -- the deliverable is the work, not a plan for the work.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Independent verification</h3>
+          <p>Atrium never grades its own homework. An external judge checks the live result against acceptance criteria written before the run began.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 4v8h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>No resets, only iteration</h3>
+          <p>A failure doesn't erase progress. Every run leaves a resumable state; the next attempt picks up where it left off.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="19" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.4V12m0 0L6.5 16m5.5-4l5.5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Orchestration</h3>
+          <p>One orchestrator delegates to specialized worker agents -- builder, verifier, researcher, utility -- instead of one generalist doing everything badly.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h10M4 18h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <h3>LLM thinks, code runs</h3>
+          <p>The model plans and decides. Deliverables execute as deterministic code -- no LLM calls left inside the runtime loop.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+          </div>
+          <h3>Gated actions</h3>
+          <p>Irreversible or outward-facing actions -- deploy, publish, push -- require the owner's one-tap approval, enforced by hooks, not good intentions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="safety">
+    <div class="section-inner">
+      <div class="safety-grid">
+        <div class="reveal">
+          <p class="kicker">Safety</p>
+          <h2>Gated actions, enforced by hooks</h2>
+          <p class="lede">Atrium can do a great deal on its own. The things it can't do alone are the things you can't take back.</p>
+          <ul class="safety-list">
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Deploys, publishes, pushes, deletions, and payments pause for explicit, one-tap owner approval.
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              The gate is enforced by hooks in the system itself, not by an instruction the model could talk its way around.
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Everything reversible -- drafting, building, testing in a sandbox -- runs freely and immediately.
+            </li>
+          </ul>
+        </div>
+        <div class="reveal">
+          <div class="approval-mock" role="img" aria-label="Mock approval prompt showing a pending deploy request with approve and deny actions">
+            <div class="row"><span class="lamp red"></span><span class="lamp yellow"></span><span class="lamp green"></span><span style="margin-left:auto">gate &middot; pending</span></div>
+            <p class="approval-title">Deploy to production?</p>
+            <p class="approval-body">builder-agent wants to push 3 files to botatrium.com. This action is irreversible and outward-facing.</p>
+            <div class="approval-actions">
+              <span class="a-btn approve">Approve</span>
+              <span class="a-btn deny">Deny</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="terminal">
+    <div class="section-inner">
+      <p class="kicker reveal">A run, transcribed</p>
+      <h2 class="reveal">What "finished" actually looks like</h2>
+      <p class="lede reveal">This is a representative transcript of one Atrium run, shown in full below -- not a mockup, the actual shape of the log.</p>
+      <div class="terminal reveal">
+        <div class="terminal-bar">
+          <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+          <span class="terminal-title">atrium -- run transcript</span>
+        </div>
+        <div class="terminal-body">
+          <p class="term-line"><span class="term-prompt">$</span> atrium run "deploy the pricing page update and confirm it's live"</p>
+          <p class="term-line">&gt; orchestrator: plan created -- 4 steps, 3 agents</p>
+          <p class="term-line">&gt; delegating to builder-agent...</p>
+          <p class="term-line">&gt; builder-agent: code written, local checks passing (9/9)</p>
+          <p class="term-line">&gt; gated action: deploy &rarr; awaiting owner approval</p>
+          <p class="term-line">&gt; owner: approved &#10003;</p>
+          <p class="term-line">&gt; builder-agent: deployed to production</p>
+          <p class="term-line">&gt; delegating to verifier-agent...</p>
+          <p class="term-line">&gt; verifier-agent: checking live URL against acceptance criteria...</p>
+          <p class="term-line">&gt; verifier-agent: <span class="term-pass">PASS 13/13</span> -- run complete, result is live<span class="term-cursor" aria-hidden="true"></span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
+
 <footer>
-  atrium — built by atrium, task one
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M7 16V9.5L12 6l5 3.5V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Atrium -- the autonomous executor
+    </div>
+    <ul class="footer-links">
+      <li><a href="#hero">Top</a></li>
+      <li><a href="#how">How it runs</a></li>
+      <li><a href="#principles">Principles</a></li>
+      <li><a href="#safety">Safety</a></li>
+    </ul>
+    <span>&copy; 2026 Atrium</span>
+  </div>
 </footer>
+
+<noscript>
+  <style>.reveal,.step,.term-line{ opacity:1 !important; transform:none !important; }</style>
+</noscript>
+
+<script>
+(function(){
+  "use strict";
+
+  try{
+    var bar = document.getElementById('progress-bar');
+    if(bar){
+      var ticking = false;
+      var updateProgress = function(){
+        var doc = document.documentElement;
+        var scrollTop = window.pageYOffset || doc.scrollTop || 0;
+        var height = (doc.scrollHeight || 0) - (doc.clientHeight || window.innerHeight || 1);
+        var pct = height > 0 ? Math.min(1, Math.max(0, scrollTop * Math.pow(height, -1))) : 0;
+        bar.style.transform = 'scaleX(' + pct + ')';
+        ticking = false;
+      };
+      window.addEventListener('scroll', function(){
+        if(!ticking){
+          window.requestAnimationFrame(updateProgress);
+          ticking = true;
+        }
+      }, { passive: true });
+      window.addEventListener('resize', updateProgress);
+      updateProgress();
+    }
+  }catch(e){}
+
+  try{
+    var revealEls = document.querySelectorAll('.reveal');
+    if('IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        for(var i=0;i<entries.length;i++){
+          var entry = entries[i];
+          if(entry.isIntersecting){
+            entry.target.classList.add('in-view');
+            io.unobserve(entry.target);
+          }
+        }
+      }, { threshold: 0.15, rootMargin: '0px 0px -80px 0px' });
+      for(var i=0;i<revealEls.length;i++){ io.observe(revealEls[i]); }
+    } else {
+      for(var j=0;j<revealEls.length;j++){ revealEls[j].classList.add('in-view'); }
+    }
+  }catch(e){
+    var fallbackEls = document.querySelectorAll('.reveal');
+    for(var k=0;k<fallbackEls.length;k++){ fallbackEls[k].classList.add('in-view'); }
+  }
+
+  try{
+    var canvas = document.getElementById('hero-canvas');
+    if(canvas && canvas.getContext){
+      var ctx = canvas.getContext('2d');
+      if(ctx){
+        var reduceMotion = false;
+        try{
+          reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }catch(e){}
+
+        var width = 0, height2 = 0, dpr = 1, nodes = [], rafId = null;
+
+        var resize = function(){
+          var parent = canvas.parentElement;
+          var rect = parent ? parent.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+          width = Math.max(1, rect.width);
+          height2 = Math.max(1, rect.height);
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.round(width * dpr);
+          canvas.height = Math.round(height2 * dpr);
+          canvas.style.width = width + 'px';
+          canvas.style.height = height2 + 'px';
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+          var count = Math.max(18, Math.min(55, Math.floor((width * height2) * 0.0000384615385)));
+          nodes = [];
+          for(var n=0; n<count; n++){
+            nodes.push({
+              x: Math.random() * width,
+              y: Math.random() * height2,
+              vx: (Math.random() - 0.5) * 0.22,
+              vy: (Math.random() - 0.5) * 0.22
+            });
+          }
+        };
+
+        var draw = function(){
+          ctx.clearRect(0, 0, width, height2);
+          for(var a=0; a<nodes.length; a++){
+            var node = nodes[a];
+            node.x += node.vx;
+            node.y += node.vy;
+            if(node.x < 0 || node.x > width) node.vx *= -1;
+            if(node.y < 0 || node.y > height2) node.vy *= -1;
+          }
+          for(var i=0; i<nodes.length; i++){
+            for(var j=i+1; j<nodes.length; j++){
+              var p1 = nodes[i], p2 = nodes[j];
+              var dx = p1.x - p2.x, dy = p1.y - p2.y;
+              var dist = Math.sqrt(dx*dx + dy*dy);
+              if(dist < 130){
+                ctx.strokeStyle = 'rgba(124,127,255,' + (0.16 * (1 - dist*0.0076923077)) + ')';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+              }
+            }
+          }
+          for(var k=0; k<nodes.length; k++){
+            ctx.fillStyle = 'rgba(180,185,255,0.75)';
+            ctx.beginPath();
+            ctx.arc(nodes[k].x, nodes[k].y, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        };
+
+        var loop = function(){
+          draw();
+          rafId = window.requestAnimationFrame(loop);
+        };
+
+        resize();
+        if(reduceMotion){
+          draw();
+        } else {
+          loop();
+        }
+
+        var resizeTimer = null;
+        window.addEventListener('resize', function(){
+          if(resizeTimer) window.clearTimeout(resizeTimer);
+          resizeTimer = window.setTimeout(function(){
+            resize();
+            if(reduceMotion || rafId === null) draw();
+          }, 160);
+        });
+
+        document.addEventListener('visibilitychange', function(){
+          if(document.hidden){
+            if(rafId !== null){ window.cancelAnimationFrame(rafId); rafId = null; }
+          } else if(!reduceMotion && rafId === null){
+            loop();
+          }
+        });
+      }
+    }
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
